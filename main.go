@@ -10,6 +10,7 @@ import (
 	"math/big"
 	"net/http"
 	"sync"
+	"url-shortener/database"
 )
 
 var (
@@ -18,6 +19,8 @@ var (
 	mu          sync.Mutex
 	lettersRune = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 )
+
+var db, _ = database.InitDB()
 
 func encrypt(originalUrl string) string {
 	block, err := aes.NewCipher(secretKey)
@@ -88,22 +91,18 @@ func shortenUrl(w http.ResponseWriter, r *http.Request) {
 	mu.Unlock()
 
 	shortUrl := fmt.Sprintf("http://localhost:8080/%s", shortId)
+	database.StoreURL(db, shortId, originalUrl)
 	fmt.Fprintf(w, "The shrtener URL is: %s", shortUrl)
 }
 
 func redirectHandler(w http.ResponseWriter, r *http.Request) {
 	shortId := r.URL.Path[1:]
-
-	mu.Lock()
-	encryptedUrl, ok := urlStore[shortId]
-	mu.Unlock()
-
-	if !ok {
+	originalUrl, err := database.GetOriginalURL(db, shortId)
+	if err != nil {
 		http.Error(w, "URL not found", http.StatusNotFound)
 	}
 
-	decryptedUrl := decrypt(encryptedUrl)
-	http.Redirect(w, r, decryptedUrl, http.StatusFound)
+	http.Redirect(w, r, originalUrl, http.StatusFound)
 }
 
 func main() {
