@@ -10,8 +10,11 @@ import (
 	"math/big"
 	"net/http"
 	"sync"
-	"url-shortener/database"
+	"url-shortener/config"
+	"url-shortener/schemas"
 )
+
+var logger config.Logger
 
 var (
 	urlStore    = make(map[string]string)
@@ -20,7 +23,7 @@ var (
 	lettersRune = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 )
 
-var db, _ = database.InitDB()
+var db = config.GetSQLite()
 
 func encrypt(originalUrl string) string {
 	block, err := aes.NewCipher(secretKey)
@@ -90,19 +93,31 @@ func shortenUrl(w http.ResponseWriter, r *http.Request) {
 	urlStore[shortId] = encryptedUrl
 	mu.Unlock()
 
+	url := schemas.Url{
+		OriginalUrl: originalUrl,
+		ShortId:     shortId,
+	}
+	if err := db.Create(&url).Error; err != nil {
+		logger.Errorf("error creating url: %v", err)
+		http.Error(w, "Error creating url", http.StatusNotFound)
+		return
+	}
+
 	shortUrl := fmt.Sprintf("http://localhost:8080/%s", shortId)
-	database.StoreURL(db, shortId, originalUrl)
+
 	fmt.Fprintf(w, "The shrtener URL is: %s", shortUrl)
 }
 
 func redirectHandler(w http.ResponseWriter, r *http.Request) {
 	shortId := r.URL.Path[1:]
-	originalUrl, err := database.GetOriginalURL(db, shortId)
-	if err != nil {
+
+	var url schemas.Url
+	result := db.Where("ShortUrl = ?", shortId).Find(&url)
+	if result.Error != nil {
 		http.Error(w, "URL not found", http.StatusNotFound)
 	}
 
-	http.Redirect(w, r, originalUrl, http.StatusFound)
+	http.Redirect(w, r, url.OriginalUrl, http.StatusFound)
 }
 
 func main() {
