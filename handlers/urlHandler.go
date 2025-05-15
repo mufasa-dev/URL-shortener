@@ -10,11 +10,10 @@ import (
 	"math/big"
 	"net/http"
 	"sync"
-	"url-shortener/config"
 	"url-shortener/schemas"
-)
 
-var logger config.Logger
+	"github.com/gin-gonic/gin"
+)
 
 var (
 	urlStore    = make(map[string]string)
@@ -23,12 +22,14 @@ var (
 	lettersRune = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 )
 
-var db = config.GetSQLite()
-
-func ShortenUrl(w http.ResponseWriter, r *http.Request) {
-	originalUrl := r.URL.Query().Get("url")
+func ShortenUrl(ctx *gin.Context) {
+	originalUrl := ctx.Query("url")
 	if originalUrl == "" {
-		http.Error(w, "Param URL on query is needed", http.StatusBadRequest)
+		ctx.Header("Content-type", "application/json")
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Param URL on query is needed",
+			"code":    http.StatusBadRequest,
+		})
 		return
 	}
 
@@ -44,25 +45,34 @@ func ShortenUrl(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := db.Create(&url).Error; err != nil {
 		logger.Errorf("error creating url: %v", err)
-		http.Error(w, "Error creating url", http.StatusNotFound)
+		ctx.Header("Content-type", "application/json")
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message": "Error creating url",
+			"code":    http.StatusNotFound,
+		})
 		return
 	}
 
 	shortUrl := fmt.Sprintf("http://localhost:8080/%s", shortId)
 
-	fmt.Fprintf(w, "The shrtener URL is: %s", shortUrl)
+	fmt.Fprintf(ctx.Writer, "The shrtener URL is: %s", shortUrl)
 }
 
-func RedirectHandler(w http.ResponseWriter, r *http.Request) {
-	shortId := r.URL.Path[1:]
+func RedirectHandler(ctx *gin.Context) {
+	shortId := ctx.Param(":id")
 
 	var url schemas.Url
 	result := db.Where("ShortUrl = ?", shortId).Find(&url)
 	if result.Error != nil {
-		http.Error(w, "URL not found", http.StatusNotFound)
+		ctx.Header("Content-type", "application/json")
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message": "URL not found",
+			"code":    http.StatusNotFound,
+		})
+		return
 	}
 
-	http.Redirect(w, r, url.OriginalUrl, http.StatusFound)
+	ctx.Redirect(http.StatusFound, url.OriginalUrl)
 }
 
 func encrypt(originalUrl string) string {

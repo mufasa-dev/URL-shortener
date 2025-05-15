@@ -1,16 +1,19 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net/http"
-	"url-shortener/handlers"
+	"url-shortener/config"
+	"url-shortener/router"
 )
 
-func main() {
-	http.HandleFunc("/shorten", handlers.ShortenUrl)
-	http.HandleFunc("/", handlers.RedirectHandler)
+var logger config.Logger
 
-	fmt.Println("Server running on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+func main() {
+	logger = *config.GetLogger("main")
+
+	if err := config.Init(); err != nil {
+		logger.Errorf("config initialization error: %v", err)
+		return
+	}
+
+	router.Initialize()
 }
