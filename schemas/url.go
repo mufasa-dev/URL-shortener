@@ -4,6 +4,6 @@ import "gorm.io/gorm"
 
 type Url struct {
 	gorm.Model
-	id          string
-	originalUrl string
+	OriginalUrl string
+	ShortId     string
 }

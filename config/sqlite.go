@@ -9,10 +9,12 @@ import (
 )
 
 func InitSQLite() (*gorm.DB, error) {
+	logger := GetLogger("sqlite")
 	dbPath := "./db/main.db"
 
 	_, err := os.Stat(dbPath)
 	if os.IsNotExist(err) {
+		logger.Info("database file not found, creating...")
 		err = os.MkdirAll("./db", os.ModePerm)
 		if err != nil {
 			return nil, err
@@ -27,10 +29,12 @@ func InitSQLite() (*gorm.DB, error) {
 	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 
 	if err != nil {
+		logger.Errorf("sqlite oppening error: %v", err)
 		return nil, err
 	}
 	err = db.AutoMigrate(&schemas.Url{})
 	if err != nil {
+		logger.Errorf("sqlite automigration error: %v", err)
 		return nil, err
 	}
 
