@@ -13,6 +13,7 @@ import (
 	"url-shortener/schemas"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 var (
@@ -47,10 +48,29 @@ func ShortenUrl(ctx *gin.Context) {
 	urlStore[shortId] = encryptedUrl
 	mu.Unlock()
 
-	url := schemas.Url{
+	var url schemas.Url
+	result := db.Where("OriginalUrl = ?", originalUrl).Find(&url)
+	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
+		ctx.Header("Content-type", "application/json")
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message": "URL not found",
+			"code":    http.StatusNotFound,
+		})
+		return
+	} else if result.Error == gorm.ErrRecordNotFound {
+		shortUrl := fmt.Sprintf("http://localhost:8080/%s", url.ShortId)
+		ctx.Header("Content-type", "application/json")
+		ctx.JSON(http.StatusOK, gin.H{
+			"message": fmt.Sprintf("The shrtener URL is: %v", shortUrl),
+			"code":    http.StatusNotFound,
+		})
+	}
+
+	url = schemas.Url{
 		OriginalUrl: originalUrl,
 		ShortId:     shortId,
 	}
+
 	if err := db.Create(&url).Error; err != nil {
 		logger.Errorf("error creating url: %v", err)
 		ctx.Header("Content-type", "application/json")
@@ -62,8 +82,11 @@ func ShortenUrl(ctx *gin.Context) {
 	}
 
 	shortUrl := fmt.Sprintf("http://localhost:8080/%s", shortId)
-
-	fmt.Fprintf(ctx.Writer, "The shrtener URL is: %s", shortUrl)
+	ctx.Header("Content-type", "application/json")
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": fmt.Sprintf("The shrtener URL is: %v", shortUrl),
+		"code":    http.StatusNotFound,
+	})
 }
 
 // @Sumary Get URL
