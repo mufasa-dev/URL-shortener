@@ -66,6 +66,14 @@ func ShortenUrl(ctx *gin.Context) {
 	fmt.Fprintf(ctx.Writer, "The shrtener URL is: %s", shortUrl)
 }
 
+// @Sumary Get URL
+// @Description Receive a shortened url and redirect to the complete url
+// @Tags Shorten
+// @Param id string true "Shorten URL"
+// @Success 200 {object}
+// @Failure 401 {object}
+// @Failure 500 {object}
+// @Router / [get]
 func RedirectHandler(ctx *gin.Context) {
 	shortId := ctx.Param(":id")
 
