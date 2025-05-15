@@ -1,4 +1,73 @@
+definitions:
+  schemas.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  schemas.UrlResponse:
+    properties:
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      id:
+        type: integer
+      original_url:
+        type: string
+      updated_at:
+        type: string
+    type: object
 info:
   contact: {}
-paths: {}
+paths:
+  /:
+    get:
+      description: Receive a shortened url and redirect to the complete url
+      parameters:
+      - description: Shorten URL
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Successsfuly
+          schema:
+            $ref: '#/definitions/schemas.UrlResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/schemas.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schemas.ErrorResponse'
+      tags:
+      - Shorten
+  /shorten:
+    get:
+      description: Recive a URL and return a shorten version
+      parameters:
+      - description: URL
+        in: query
+        name: url
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.UrlResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/schemas.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schemas.ErrorResponse'
+      tags:
+      - Shorten
 swagger: "2.0"

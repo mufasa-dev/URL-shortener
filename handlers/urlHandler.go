@@ -27,9 +27,9 @@ var (
 // @Description Recive a URL and return a shorten version
 // @Tags Shorten
 // @Param url query string true "URL"
-// @Success 200 {object}
-// @Failure 401 {object}
-// @Failure 500 {object}
+// @Success 200 {object} schemas.UrlResponse
+// @Failure 401 {object} schemas.ErrorResponse
+// @Failure 500 {object} schemas.ErrorResponse
 // @Router /shorten [get]
 func ShortenUrl(ctx *gin.Context) {
 	originalUrl := ctx.Query("url")
@@ -92,13 +92,13 @@ func ShortenUrl(ctx *gin.Context) {
 // @Sumary Get URL
 // @Description Receive a shortened url and redirect to the complete url
 // @Tags Shorten
-// @Param id string true "Shorten URL"
-// @Success 200 {object}
-// @Failure 401 {object}
-// @Failure 500 {object}
+// @Param id path string true "Shorten URL"
+// @Success 200 {object} schemas.UrlResponse "Successsfuly"
+// @Failure 401 {object} schemas.ErrorResponse
+// @Failure 500 {object} schemas.ErrorResponse
 // @Router / [get]
 func RedirectHandler(ctx *gin.Context) {
-	shortId := ctx.Param(":id")
+	shortId := ctx.Param("id")
 
 	var url schemas.Url
 	result := db.Where("ShortUrl = ?", shortId).Find(&url)
