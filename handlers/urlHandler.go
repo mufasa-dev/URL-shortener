@@ -22,6 +22,14 @@ var (
 	lettersRune = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 )
 
+// @Sumary Shorten URL
+// @Description Recive a URL and return a shorten version
+// @Tags Shorten
+// @Param url query string true "URL"
+// @Success 200 {object}
+// @Failure 401 {object}
+// @Failure 500 {object}
+// @Router /shorten [get]
 func ShortenUrl(ctx *gin.Context) {
 	originalUrl := ctx.Query("url")
 	if originalUrl == "" {
