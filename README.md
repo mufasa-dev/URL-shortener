@@ -1,7 +1,7 @@
 ## 🚀 URL Shortener
 A simple and efficient URL shortener built with Go and SQLite. This application allows users to shorten long URLs into concise links, making them easier to share and manage.
 
-![Skills](https://skills.syvixor.com/api/icons?i=go,sqlite,github,vscode,postman)
+![Skills](https://skills.syvixor.com/api/icons?i=go,gin,sqlite,swagger,github,vscode,postman)
 
 ## 🔧 Features
 🔗 Shorten long URLs quickly
