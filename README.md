@@ -10,8 +10,6 @@ A simple and efficient URL shortener built with Go and SQLite. This application 
 
 📡 Redirect users to the original URL
 
-📊 Track URL usage statistics (optional)
-
 🚀 Fast and lightweight
 
 ## 🏗 Installation
